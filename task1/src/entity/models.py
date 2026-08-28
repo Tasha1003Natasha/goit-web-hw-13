@@ -2,7 +2,7 @@ import enum
 from datetime import date
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String,  DateTime, func, Enum, Integer, ForeignKey
+from sqlalchemy import String,  DateTime, func, Enum, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import DeclarativeBase
 from datetime import date
 
@@ -20,7 +20,7 @@ class Contact(Base):
     phone: Mapped[str] = mapped_column(String(20))
     birthday: Mapped[date]
     info: Mapped[str | None] = mapped_column(String(250), nullable=True)
-    # completed: Mapped[bool] = mapped_column(default=False)
+    completed: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[date] = mapped_column(
         'created_at', DateTime, default=func.now(), nullable=True)
     updated_at: Mapped[date] = mapped_column('updated_at', DateTime, default=func.now(), onupdate=func.now(),
@@ -52,4 +52,5 @@ class User(Base):
         'updated_at', DateTime, default=func.now(), onupdate=func.now())
     role: Mapped[Enum] = mapped_column(
         'role', Enum(Role), default=Role.user, nullable=True)
-    # completed: Mapped[bool] = mapped_column(default=False)
+    confirmed: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=True)

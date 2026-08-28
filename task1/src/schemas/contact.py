@@ -1,6 +1,7 @@
 from datetime import date, datetime
 import re
 from pydantic import BaseModel, Field, ConfigDict, field_validator
+from typing import Optional
 from src.schemas.user import UserResponse
 
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -13,6 +14,7 @@ class ContactSchema(BaseModel):
     phone: str = Field(max_length=20)
     birthday: date
     info: str | None = Field(default=None, max_length=250)
+    completed: Optional[bool] = False
 
     @field_validator("email")
     @classmethod
@@ -24,7 +26,7 @@ class ContactSchema(BaseModel):
 
 
 class ContactUpdateSchema(ContactSchema):
-    pass
+    completed: bool
 
 
 class ContactResponse(BaseModel):
@@ -35,6 +37,7 @@ class ContactResponse(BaseModel):
     phone: str
     birthday: date
     info: str | None = None
+    completed: bool
     created_at: datetime | None
     updated_at: datetime | None
     user: UserResponse | None
