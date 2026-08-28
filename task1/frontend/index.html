@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacts App</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+  <script src="script.js"></script>
+</head>
+
+<body>
+  <div class="container py-5" x-data="contactsApp()" x-init="init()">
+    <div class="row">
+      <div class="col-lg-10 offset-lg-1">
+        <h1 class="mb-4 text-center">Contacts App</h1>
+
+        <div x-show="error" class="alert alert-danger" x-text="error"></div>
+
+        <form class="mb-4" @submit.prevent="createContact">
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <input type="text" x-model="newContact.name" class="form-control" placeholder="Name" required minlength="3" maxlength="50">
+            </div>
+            <div class="form-group col-md-6">
+              <input type="text" x-model="newContact.surname" class="form-control" placeholder="Surname" required minlength="3" maxlength="50">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <input type="email" x-model="newContact.email" class="form-control" placeholder="Email" required maxlength="254">
+            </div>
+            <div class="form-group col-md-6">
+              <input type="text" x-model="newContact.phone" class="form-control" placeholder="Phone" required maxlength="20">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <input type="date" x-model="newContact.birthday" class="form-control" required>
+            </div>
+            <div class="form-group col-md-6">
+              <input type="text" x-model="newContact.info" class="form-control" placeholder="Info" maxlength="250">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Add contact</button>
+          <button type="button" class="btn btn-outline-secondary ml-2" @click="getBirthdays">Birthdays soon</button>
+          <button type="button" class="btn btn-outline-secondary ml-2" @click="getContacts">All contacts</button>
+        </form>
+
+        <div class="input-group mb-3">
+          <input type="text" x-model="query" class="form-control" placeholder="Search by name, surname, or email">
+          <div class="input-group-append">
+            <button class="btn btn-outline-primary" type="button" @click="getContacts">Search</button>
+          </div>
+        </div>
+
+        <ul class="list-group">
+          <template x-for="contact in contacts" :key="contact.id">
+            <li class="list-group-item">
+              <div x-show="!contact.editing">
+                <h5 class="mb-1" x-text="`${contact.name} ${contact.surname}`"></h5>
+                <div><strong>Email:</strong> <span x-text="contact.email"></span></div>
+                <div><strong>Phone:</strong> <span x-text="contact.phone"></span></div>
+                <div><strong>Birthday:</strong> <span x-text="contact.birthday"></span></div>
+                <div x-show="contact.info"><strong>Info:</strong> <span x-text="contact.info"></span></div>
+                <button @click="contact.editing = true" class="btn btn-sm btn-warning mt-2">Edit</button>
+                <button @click="deleteContact(contact.id)" class="btn btn-sm btn-danger mt-2">Delete</button>
+              </div>
+
+              <div x-show="contact.editing">
+                <div class="form-row">
+                  <div class="form-group col-md-6">
+                    <input type="text" class="form-control" x-model="contact.name" required minlength="3" maxlength="50">
+                  </div>
+                  <div class="form-group col-md-6">
+                    <input type="text" class="form-control" x-model="contact.surname" required minlength="3" maxlength="50">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group col-md-6">
+                    <input type="email" class="form-control" x-model="contact.email" required maxlength="254">
+                  </div>
+                  <div class="form-group col-md-6">
+                    <input type="text" class="form-control" x-model="contact.phone" required maxlength="20">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group col-md-6">
+                    <input type="date" class="form-control" x-model="contact.birthday" required>
+                  </div>
+                  <div class="form-group col-md-6">
+                    <input type="text" class="form-control" x-model="contact.info" maxlength="250">
+                  </div>
+                </div>
+                <button @click="updateContact(contact)" class="btn btn-sm btn-success">Save</button>
+                <button @click="contact.editing = false" class="btn btn-sm btn-secondary">Cancel</button>
+              </div>
+            </li>
+          </template>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
