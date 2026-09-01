@@ -1,0 +1,39 @@
+{% extends 'quotes/base.html' %}
+
+{% block content %}
+
+<div class="signup-page quote-page">
+    <a href="{% url 'quotes:root' %}" class="signup-back">Go back to the main page</a>
+
+    <hr class="signup-divider">
+
+    <h2 class="signup-title">Add Quote</h2>
+
+    <form method="POST" action="{% url 'quotes:quote' %}" class="signup-form">
+        {% csrf_token %}
+        <div class="signup-field">
+            <label for="{{ form.author.id_for_label }}">Author:</label>
+            {{ form.author }}
+            <span class="signup-error">{{ form.errors.author }}</span>
+        </div>
+
+        <div class="signup-field">
+            <label for="{{ form.quote.id_for_label }}">Quote:</label>
+            {{ form.quote }}
+            <span class="signup-error">{{ form.errors.quote }}</span>
+        </div>
+
+        <div class="signup-field">
+            <label for="{{ form.tags.id_for_label }}">Tags:</label>
+            {{ form.tags }}
+            <span class="signup-error">{{ form.errors.tags }}</span>
+        </div>
+
+        <div class="signup-actions">
+            <button type="submit">Submit</button>
+            <button type="reset" class="secondary">Reset</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

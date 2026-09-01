@@ -1,0 +1,38 @@
+{% extends 'quotes/base.html' %} {% block content %}
+
+<h3>
+  Viewing tag:
+  <a href="{% url 'quotes:tag_detail' tag.name %}">{{ tag.name }}</a>
+</h3>
+<div class="col-md-8" bis_skin_checked="1">
+  <div class="row" bis_skin_checked="1">
+    <div class="col-md-8" bis_skin_checked="1">
+      {% for quote in quotes %}
+      <div
+        class="quote"
+        itemscope=""
+        itemtype="http://schema.org/CreativeWork"
+        bis_skin_checked="1"
+      >
+        <span class="text" itemprop="text">{{quote.quote}}</span>
+        <span
+          >by
+          <small class="author" itemprop="author">
+            {{ quote.author.fullname }}</small
+          >
+          <a href="{% url 'quotes:author_detail' quote.author_id %}">(about)</a>
+        </span>
+        <div class="tags" bis_skin_checked="1">
+          Tags: {% for tag in quote.tags.all %}
+          <a class="tag" href="/tag/{{ tag.name }}/">{{tag}}</a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+      <nav>
+        <ul class="pager"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'quotes/base.html' %}
+
+{% block content %}
+
+<div class="signup-page author-page">
+    <a href="{% url 'quotes:root' %}" class="signup-back">Go back to the main page</a>
+
+    <hr class="signup-divider">
+
+    <h2 class="signup-title">Add Author</h2>
+
+    <form method="POST" action="{% url 'quotes:author' %}" class="signup-form">
+        {% csrf_token %}
+        <div class="signup-field">
+            <label for="{{ form.fullname.id_for_label }}">Fullname:</label>
+            {{ form.fullname }}
+            <span class="signup-error">{{ form.errors.fullname }}</span>
+        </div>
+
+        <div class="signup-field">
+            <label for="{{ form.born_date.id_for_label }}">Born date:</label>
+            {{ form.born_date }}
+            <span class="signup-error">{{ form.errors.born_date }}</span>
+        </div>
+
+        <div class="signup-field">
+            <label for="{{ form.born_location.id_for_label }}">Born location:</label>
+            {{ form.born_location }}
+            <span class="signup-error">{{ form.errors.born_location }}</span>
+        </div>
+
+        <div class="signup-field">
+            <label for="{{ form.description.id_for_label }}">Description:</label>
+            {{ form.description }}
+            <span class="signup-error">{{ form.errors.description }}</span>
+        </div>
+
+        <div class="signup-actions">
+            <button type="submit">Submit</button>
+            <button type="reset" class="secondary">Reset</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

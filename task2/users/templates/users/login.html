@@ -1,0 +1,41 @@
+{% extends 'quotes/base.html' %}
+
+{% block content %}
+
+<div class="signup-page">
+    <a href="{% url 'quotes:root' %}" class="signup-back">Go back to the main page</a>
+
+    <hr class="signup-divider">
+
+    <h2 class="signup-title">Login</h2>
+
+    {% if messages %}
+    <div class="signup-form">
+        {% for message in messages %}
+        <div {% if message.tags %} class="alert alert-{{ message.tags }}" {% endif %}>{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form action="{% url 'users:login' %}" method="post" class="signup-form">
+        {% csrf_token %}
+        <div class="signup-field">
+            <label for="{{ form.username.id_for_label }}">Username:</label>
+            {{ form.username }}
+            <span class="signup-error">{{ form.errors.username }}</span>
+        </div>
+
+        <div class="signup-field">
+            <label for="{{ form.password.id_for_label }}">Password:</label>
+            {{ form.password }}
+            <span class="signup-error">{{ form.errors.password }}</span>
+        </div>
+
+        <div class="signup-actions">
+            <button type="submit">Submit</button>
+            <button type="reset" class="secondary">Reset</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
