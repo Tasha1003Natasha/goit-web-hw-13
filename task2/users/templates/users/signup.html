@@ -1,39 +1,47 @@
-{% extends 'quotes/base.html' %}
-
-{% block content %}
+{% extends 'quotes/base.html' %} {% block content %}
 
 <div class="signup-page">
-    <a href="{% url 'quotes:root' %}" class="signup-back">Go back to the main page</a>
+  <a href="{% url 'quotes:root' %}" class="signup-back"
+    >Go back to the main page</a
+  >
 
-    <hr class="signup-divider">
+  <hr class="signup-divider" />
 
-    <h2 class="signup-title">Sign Up</h2>
+  <h2 class="signup-title">Sign Up</h2>
 
-    <form method="post" action="{% url 'users:signup' %}" class="signup-form">
-        {% csrf_token %}
-        <div class="signup-field">
-            <label for="{{ form.username.id_for_label }}">Username:</label>
-            {{ form.username }}
-            <span class="signup-error">{{ form.errors.username }}</span>
-        </div>
+  <form method="post" action="{% url 'users:signup' %}" class="signup-form">
+    {% csrf_token %}
+    <div class="signup-field">
+      <label for="{{ form.username.id_for_label }}">Username:</label>
+      {{ form.username }}
+      <span class="signup-error">{{ form.errors.username }}</span>
+    </div>
+    
+    <div class="signup-field">
+      <label for="{{ form.email.id_for_label }}">Email:</label>
+      {{ form.email }}
+      <span class="signup-error">{{ form.errors.email }}</span>
+    </div>
 
-        <div class="signup-field">
-            <label for="{{ form.password1.id_for_label }}">Password:</label>
-            {{ form.password1 }}
-            <span class="signup-error">{{ form.errors.password1 }}</span>
-        </div>
+    <div class="signup-field">
+      <label for="{{ form.password1.id_for_label }}">Password:</label>
+      {{ form.password1 }}
+      <span class="signup-error">{{ form.errors.password1 }}</span>
+    </div>
 
-        <div class="signup-field">
-            <label for="{{ form.password2.id_for_label }}">Password confirmation:</label>
-            {{ form.password2 }}
-            <span class="signup-error">{{ form.errors.password2 }}</span>
-        </div>
+    <div class="signup-field">
+      <label for="{{ form.password2.id_for_label }}"
+        >Password confirmation:</label
+      >
+      {{ form.password2 }}
+      <span class="signup-error">{{ form.errors.password2 }}</span>
+    </div>
 
-        <div class="signup-actions">
-            <button type="submit">Submit</button>
-            <button type="reset" class="secondary">Reset</button>
-        </div>
-    </form>
+    <div class="signup-actions">
+      <button type="submit">Submit</button>
+      <button type="reset" class="secondary">Reset</button>
+    </div>
+  </form>
 </div>
 
 {% endblock %}
