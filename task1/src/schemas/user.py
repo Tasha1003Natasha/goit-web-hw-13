@@ -30,3 +30,8 @@ class TokenSchema(BaseModel):
 
 class RequestEmail(BaseModel):
     email: EmailStr
+
+
+class ResetPassword(BaseModel):
+    token: str
+    password: str = Field(min_length=6, max_length=8)

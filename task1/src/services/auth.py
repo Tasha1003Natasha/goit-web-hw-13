@@ -98,7 +98,8 @@ class Auth:
     def create_email_token(self, data: dict):
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(days=1)
-        to_encode.update({"iat": datetime.now(timezone.utc), "exp": expire})
+        to_encode.update({"iat": datetime.now(timezone.utc),
+                         "exp": expire, "scope": "email_verification"})
         token = jwt.encode(to_encode, self.SECRET_KEY,
                            algorithm=self.ALGORITHM)
         return token
@@ -107,6 +108,12 @@ class Auth:
         try:
             payload = jwt.decode(token, self.SECRET_KEY,
                                  algorithms=[self.ALGORITHM])
+            if payload.get("scope") != "email_verification":
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token scope"
+                )
+
             email = payload["sub"]
             return email
         except JWTError as e:
@@ -114,6 +121,35 @@ class Auth:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Invalid token for email verification",
+            )
+
+    def create_password_reset_token(self, data: dict):
+        to_encode = data.copy()
+        expire = datetime.now(timezone.utc) + timedelta(minutes=30)
+        to_encode.update({
+            "iat": datetime.now(timezone.utc),
+            "exp": expire,
+            "scope": "password_reset"
+        })
+        token = jwt.encode(to_encode, self.SECRET_KEY,
+                           algorithm=self.ALGORITHM)
+        return token
+
+    async def get_email_from_password_reset_token(self, token: str):
+        try:
+            payload = jwt.decode(token, self.SECRET_KEY,
+                                 algorithms=[self.ALGORITHM])
+            if payload.get("scope") != "password_reset":
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token scope"
+                )
+            return payload["sub"]
+        except JWTError as e:
+            print(e)
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid token for password reset",
             )
 
 

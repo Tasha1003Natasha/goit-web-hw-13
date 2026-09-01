@@ -345,3 +345,12 @@ docker compose down
 
 
 
+
+
+POST /api/auth/signup
+POST /api/auth/login
+GET  /api/auth/refresh_token
+GET  /api/auth/confirmed_email/{token}
+POST /api/auth/request_email
+POST /api/auth/request_password_reset
+POST /api/auth/reset_password

@@ -1,4 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException
+import re
+from ipaddress import ip_address
+from typing import Callable
+from pathlib import Path
+
+from fastapi import FastAPI, Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +15,10 @@ from src.routes import contacts
 from src.routes import auth
 
 app = FastAPI()
-
+banned_ips = [
+    ip_address("192.168.1.1"),
+    ip_address("192.168.1.2"),
+]
 origins = ["*"]
 
 app.add_middleware(
@@ -18,6 +28,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+user_agent_ban_list = [r"Googlebot", r"Python-urllib"]
+
+
+@app.middleware("http")
+async def user_agent_ban_middleware(request: Request, call_next: Callable):
+    print(request.headers.get("Authorization"))
+    user_agent = request.headers.get("user-agent")
+    print(user_agent)
+    for ban_pattern in user_agent_ban_list:
+        if re.search(ban_pattern, user_agent):
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"detail": "You are banned"},
+            )
+    response = await call_next(request)
+    return response
+
+
+# BASE_DIR = Path(".")
+# app.mount("/static", StaticFiles(directory=BASE_DIR /
+#           "src" / "static"), name="static")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")

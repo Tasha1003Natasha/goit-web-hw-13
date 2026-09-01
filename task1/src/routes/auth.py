@@ -4,9 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.repository import users as repositories_users
-from src.schemas.user import UserSchema, TokenSchema, UserResponse, RequestEmail
+from src.schemas.user import UserSchema, TokenSchema, UserResponse, RequestEmail, ResetPassword
 from src.services.auth import auth_service
-from src.services.email import send_email
+from src.services.email import send_email, send_password_reset_email
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 get_refresh_token = HTTPBearer()
@@ -87,9 +87,41 @@ async def request_email(body: RequestEmail, background_tasks: BackgroundTasks, r
     return {"message": "Check your email for confirmation."}
 
 
-# @router.get('/{username}')
-# async def request_email(username: str, response: Response, db: AsyncSession = Depends(get_db)):
-#     print('--------------------------------')
-#     print(f'{username} зберігаємо що він відкрив email в БД')
-#     print('--------------------------------')
-#     return FileResponse("src/static/open_check.png", media_type="image/png", content_disposition_type="inline")
+@router.post("/request_password_reset")
+async def request_password_reset(
+    body: RequestEmail,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    user = await repositories_users.get_user_by_email(body.email, db)
+
+    if user:
+        background_tasks.add_task(
+            send_password_reset_email,
+            user.email,
+            user.username,
+            str(request.base_url)
+        )
+
+    return {"message": "If this email exists, password reset instructions were sent."}
+
+
+@router.post("/reset_password")
+async def reset_password(
+    body: ResetPassword,
+    db: AsyncSession = Depends(get_db)
+):
+    email = await auth_service.get_email_from_password_reset_token(body.token)
+    user = await repositories_users.get_user_by_email(email, db)
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User not found"
+        )
+
+    new_password_hash = auth_service.get_password_hash(body.password)
+    await repositories_users.update_password(user, new_password_hash, db)
+
+    return {"message": "Password successfully changed"}

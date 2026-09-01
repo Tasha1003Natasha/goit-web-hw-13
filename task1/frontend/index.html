@@ -4,103 +4,178 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contacts App</title>
+  <title>Contacts REST API</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
   <script src="script.js"></script>
 </head>
 
 <body>
-  <div class="container py-5" x-data="contactsApp()" x-init="init()">
-    <div class="row">
-      <div class="col-lg-10 offset-lg-1">
-        <h1 class="mb-4 text-center">Contacts App</h1>
+  <div class="app-shell" x-data="contactsApp()" x-init="init()">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">FastAPI REST client</p>
+        <h1>Contacts API</h1>
+      </div>
+      <div class="session-panel">
+        <span class="status-dot" :class="{ 'is-online': isAuthenticated }"></span>
+        <span x-text="isAuthenticated ? `Signed in as ${currentEmail}` : 'Not signed in'"></span>
+        <button x-show="isAuthenticated" type="button" class="btn btn-sm btn-outline-light" @click="logout">Logout</button>
+      </div>
+    </header>
 
+    <main class="content-grid">
+      <section class="auth-column">
+        <nav class="tabs" aria-label="Authentication views">
+          <button type="button" :class="{ active: activeTab === 'login' }" @click="activeTab = 'login'">Login</button>
+          <button type="button" :class="{ active: activeTab === 'signup' }" @click="activeTab = 'signup'">Signup</button>
+          <button type="button" :class="{ active: activeTab === 'verify' }" @click="activeTab = 'verify'">Verify</button>
+          <button type="button" :class="{ active: activeTab === 'reset' }" @click="activeTab = 'reset'">Password</button>
+        </nav>
+
+        <div x-show="message" class="alert alert-success" x-text="message"></div>
         <div x-show="error" class="alert alert-danger" x-text="error"></div>
 
-        <form class="mb-4" @submit.prevent="createContact">
-          <div class="form-row">
-            <div class="form-group col-md-6">
-              <input type="text" x-model="newContact.name" class="form-control" placeholder="Name" required minlength="3" maxlength="50">
-            </div>
-            <div class="form-group col-md-6">
-              <input type="text" x-model="newContact.surname" class="form-control" placeholder="Surname" required minlength="3" maxlength="50">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group col-md-6">
-              <input type="email" x-model="newContact.email" class="form-control" placeholder="Email" required maxlength="254">
-            </div>
-            <div class="form-group col-md-6">
-              <input type="text" x-model="newContact.phone" class="form-control" placeholder="Phone" required maxlength="20">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group col-md-6">
-              <input type="date" x-model="newContact.birthday" class="form-control" required>
-            </div>
-            <div class="form-group col-md-6">
-              <input type="text" x-model="newContact.info" class="form-control" placeholder="Info" maxlength="250">
-            </div>
-          </div>
-          <button type="submit" class="btn btn-primary">Add contact</button>
-          <button type="button" class="btn btn-outline-secondary ml-2" @click="getBirthdays">Birthdays soon</button>
-          <button type="button" class="btn btn-outline-secondary ml-2" @click="getContacts">All contacts</button>
+        <form x-show="activeTab === 'login'" class="panel" @submit.prevent="login">
+          <h2>Login</h2>
+          <label>Email</label>
+          <input type="email" x-model="loginForm.email" class="form-control" required>
+          <label>Password</label>
+          <input type="password" x-model="loginForm.password" class="form-control" required minlength="6" maxlength="8">
+          <button type="submit" class="btn btn-primary btn-block">Login</button>
+          <button type="button" class="btn btn-outline-primary btn-block mt-2" @click="refreshSession" :disabled="!refreshToken">Refresh Token</button>
         </form>
 
-        <div class="input-group mb-3">
-          <input type="text" x-model="query" class="form-control" placeholder="Search by name, surname, or email">
-          <div class="input-group-append">
-            <button class="btn btn-outline-primary" type="button" @click="getContacts">Search</button>
+        <form x-show="activeTab === 'signup'" class="panel" @submit.prevent="signup">
+          <h2>Create Account</h2>
+          <label>Username</label>
+          <input type="text" x-model="signupForm.username" class="form-control" required minlength="3" maxlength="50">
+          <label>Email</label>
+          <input type="email" x-model="signupForm.email" class="form-control" required>
+          <label>Password</label>
+          <input type="password" x-model="signupForm.password" class="form-control" required minlength="6" maxlength="8">
+          <button type="submit" class="btn btn-primary btn-block">Signup</button>
+        </form>
+
+        <div x-show="activeTab === 'verify'" class="panel">
+          <form @submit.prevent="requestEmail">
+            <h2>Email Verification</h2>
+            <label>Email</label>
+            <input type="email" x-model="emailRequest.email" class="form-control" required>
+            <button type="submit" class="btn btn-primary btn-block">Send Verification Email</button>
+          </form>
+
+          <form class="mt-4" @submit.prevent="confirmEmail">
+            <label>Confirmation token</label>
+            <textarea x-model="confirmToken" class="form-control token-field" required></textarea>
+            <button type="submit" class="btn btn-outline-primary btn-block mt-3">Confirm Email</button>
+          </form>
+        </div>
+
+        <div x-show="activeTab === 'reset'" class="panel">
+          <form @submit.prevent="requestPasswordReset">
+            <h2>Password Reset</h2>
+            <label>Email</label>
+            <input type="email" x-model="passwordRequest.email" class="form-control" required>
+            <button type="submit" class="btn btn-primary btn-block">Send Reset Email</button>
+          </form>
+
+          <form class="mt-4" @submit.prevent="resetPassword">
+            <label>Reset token</label>
+            <textarea x-model="resetForm.token" class="form-control token-field" required></textarea>
+            <label>New password</label>
+            <input type="password" x-model="resetForm.password" class="form-control" required minlength="6" maxlength="8">
+            <button type="submit" class="btn btn-outline-primary btn-block">Change Password</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="contacts-column">
+        <div class="toolbar">
+          <div>
+            <h2>Contacts</h2>
+            <p x-text="isAuthenticated ? `${contacts.length} contacts loaded` : 'Login to load protected contacts'"></p>
+          </div>
+          <div class="toolbar-actions">
+            <button type="button" class="btn btn-outline-secondary" @click="getBirthdays" :disabled="!isAuthenticated">Birthdays</button>
+            <button type="button" class="btn btn-outline-secondary" @click="getContacts" :disabled="!isAuthenticated">Refresh</button>
           </div>
         </div>
 
-        <ul class="list-group">
+        <form class="contact-form" @submit.prevent="createContact">
+          <input type="text" x-model="newContact.name" class="form-control" placeholder="Name" required minlength="3" maxlength="50" :disabled="!isAuthenticated">
+          <input type="text" x-model="newContact.surname" class="form-control" placeholder="Surname" required minlength="3" maxlength="50" :disabled="!isAuthenticated">
+          <input type="email" x-model="newContact.email" class="form-control" placeholder="Email" required maxlength="254" :disabled="!isAuthenticated">
+          <input type="text" x-model="newContact.phone" class="form-control" placeholder="Phone" required maxlength="20" :disabled="!isAuthenticated">
+          <input type="date" x-model="newContact.birthday" class="form-control" required :disabled="!isAuthenticated">
+          <input type="text" x-model="newContact.info" class="form-control" placeholder="Info" maxlength="250" :disabled="!isAuthenticated">
+          <label class="check-row">
+            <input type="checkbox" x-model="newContact.completed" :disabled="!isAuthenticated">
+            Completed
+          </label>
+          <button type="submit" class="btn btn-primary" :disabled="!isAuthenticated">Add Contact</button>
+        </form>
+
+        <div class="search-row">
+          <input type="text" x-model="query" class="form-control" placeholder="Search by name, surname, or email" :disabled="!isAuthenticated">
+          <button class="btn btn-outline-primary" type="button" @click="getContacts" :disabled="!isAuthenticated">Search</button>
+        </div>
+
+        <div class="lookup-row">
+          <input type="number" x-model="contactId" class="form-control" placeholder="Contact ID" min="1" :disabled="!isAuthenticated">
+          <button class="btn btn-outline-primary" type="button" @click="getContactById" :disabled="!isAuthenticated || !contactId">Find by ID</button>
+        </div>
+
+        <div class="empty-state" x-show="!contacts.length">
+          <p x-text="isAuthenticated ? 'No contacts to show.' : 'Protected contact routes require an access token.'"></p>
+        </div>
+
+        <div class="contacts-list">
           <template x-for="contact in contacts" :key="contact.id">
-            <li class="list-group-item">
+            <article class="contact-card">
               <div x-show="!contact.editing">
-                <h5 class="mb-1" x-text="`${contact.name} ${contact.surname}`"></h5>
-                <div><strong>Email:</strong> <span x-text="contact.email"></span></div>
-                <div><strong>Phone:</strong> <span x-text="contact.phone"></span></div>
-                <div><strong>Birthday:</strong> <span x-text="contact.birthday"></span></div>
-                <div x-show="contact.info"><strong>Info:</strong> <span x-text="contact.info"></span></div>
-                <button @click="contact.editing = true" class="btn btn-sm btn-warning mt-2">Edit</button>
-                <button @click="deleteContact(contact.id)" class="btn btn-sm btn-danger mt-2">Delete</button>
+                <div class="contact-card-header">
+                  <div>
+                    <h3 x-text="`${contact.name} ${contact.surname}`"></h3>
+                    <p x-text="contact.email"></p>
+                  </div>
+                  <span class="badge" :class="contact.completed ? 'badge-success' : 'badge-light'" x-text="contact.completed ? 'Done' : 'Active'"></span>
+                </div>
+                <dl class="contact-meta">
+                  <div><dt>Phone</dt><dd x-text="contact.phone"></dd></div>
+                  <div><dt>Birthday</dt><dd x-text="contact.birthday"></dd></div>
+                  <div x-show="contact.info"><dt>Info</dt><dd x-text="contact.info"></dd></div>
+                </dl>
+                <div class="card-actions">
+                  <button @click="contact.editing = true" class="btn btn-sm btn-outline-primary">Edit</button>
+                  <button @click="deleteContact(contact.id)" class="btn btn-sm btn-outline-danger">Delete</button>
+                </div>
               </div>
 
-              <div x-show="contact.editing">
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" x-model="contact.name" required minlength="3" maxlength="50">
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" x-model="contact.surname" required minlength="3" maxlength="50">
-                  </div>
+              <form x-show="contact.editing" @submit.prevent="updateContact(contact)">
+                <div class="edit-grid">
+                  <input type="text" class="form-control" x-model="contact.name" required minlength="3" maxlength="50">
+                  <input type="text" class="form-control" x-model="contact.surname" required minlength="3" maxlength="50">
+                  <input type="email" class="form-control" x-model="contact.email" required maxlength="254">
+                  <input type="text" class="form-control" x-model="contact.phone" required maxlength="20">
+                  <input type="date" class="form-control" x-model="contact.birthday" required>
+                  <input type="text" class="form-control" x-model="contact.info" maxlength="250">
                 </div>
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="email" class="form-control" x-model="contact.email" required maxlength="254">
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" x-model="contact.phone" required maxlength="20">
-                  </div>
+                <label class="check-row mt-2">
+                  <input type="checkbox" x-model="contact.completed">
+                  Completed
+                </label>
+                <div class="card-actions">
+                  <button type="submit" class="btn btn-sm btn-success">Save</button>
+                  <button type="button" @click="contact.editing = false" class="btn btn-sm btn-secondary">Cancel</button>
                 </div>
-                <div class="form-row">
-                  <div class="form-group col-md-6">
-                    <input type="date" class="form-control" x-model="contact.birthday" required>
-                  </div>
-                  <div class="form-group col-md-6">
-                    <input type="text" class="form-control" x-model="contact.info" maxlength="250">
-                  </div>
-                </div>
-                <button @click="updateContact(contact)" class="btn btn-sm btn-success">Save</button>
-                <button @click="contact.editing = false" class="btn btn-sm btn-secondary">Cancel</button>
-              </div>
-            </li>
+              </form>
+            </article>
           </template>
-        </ul>
-      </div>
-    </div>
+        </div>
+      </section>
+    </main>
   </div>
 </body>
 
