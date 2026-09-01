@@ -1,6 +1,8 @@
+import pickle
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import redis
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,18 +10,22 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 
 from src.database.db import get_db
+from src.conf.config import config
 from src.repository import users as repository_users
-
-import os
-from dotenv import load_dotenv
-load_dotenv()
 
 
 class Auth:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    SECRET_KEY = os.getenv("SECRET_KEY")
-    ALGORITHM = os.getenv("ALGORITHM")
+    SECRET_KEY = config.SECRET_KEY
+    ALGORITHM = config.ALGORITHM
+
+    cache = redis.Redis(
+        host=config.REDIS_DOMAIN,
+        port=config.REDIS_PORT,
+        db=0,
+        password=config.REDIS_PASSWORD,
+    )
 
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
@@ -90,9 +96,20 @@ class Auth:
         except JWTError as e:
             raise credentials_exception
 
-        user = await repository_users.get_user_by_email(email, db)
+        user_hash = str(email)
+
+        user = self.cache.get(user_hash)
+
         if user is None:
-            raise credentials_exception
+            print("User from database")
+            user = await repository_users.get_user_by_email(email, db)
+            if user is None:
+                raise credentials_exception
+            self.cache.set(user_hash, pickle.dumps(user))
+            self.cache.expire(user_hash, 300)
+        else:
+            print("User from cache")
+            user = pickle.loads(user)
         return user
 
     def create_email_token(self, data: dict):

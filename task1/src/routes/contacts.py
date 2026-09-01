@@ -7,13 +7,14 @@ from src.schemas.contact import ContactSchema, ContactUpdateSchema, ContactRespo
 from src.services.roles import RoleAccess
 from src.entity.models import User, Role
 from src.services.auth import auth_service
+from src.services.rate_limiter import RateLimiter
 
 router = APIRouter(prefix='/contacts', tags=['contacts'])
 
 access_to_route_all = RoleAccess([Role.admin, Role.moderator])
 
 
-@router.get("/", response_model=list[ContactResponse])
+@router.get("/", response_model=list[ContactResponse], dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def get_contacts(limit: int = Query(10, ge=10, le=500), offset: int = Query(0, ge=0),
                        query: str | None = Query(None),
                        db: AsyncSession = Depends(get_db),
@@ -22,7 +23,12 @@ async def get_contacts(limit: int = Query(10, ge=10, le=500), offset: int = Quer
     return contacts
 
 
-@router.get("/birthdays", response_model=list[ContactResponse], dependencies=[Depends(access_to_route_all)])
+@router.get("/birthdays", response_model=list[ContactResponse],
+            dependencies=[
+    Depends(access_to_route_all),
+    Depends(RateLimiter(times=5, seconds=60)),
+],
+)
 async def get_birthdays(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(auth_service.get_current_user)
@@ -31,7 +37,7 @@ async def get_birthdays(
     return contacts
 
 
-@router.get("/{contact_id}", response_model=ContactResponse)
+@router.get("/{contact_id}", response_model=ContactResponse, dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def get_contact(contact_id: int = Path(ge=1), db: AsyncSession = Depends(get_db),  user: User = Depends(auth_service.get_current_user)):
     contact = await repositories_contacts.get_contact(contact_id, db, user)
     if contact is None:
@@ -40,7 +46,7 @@ async def get_contact(contact_id: int = Path(ge=1), db: AsyncSession = Depends(g
     return contact
 
 
-@router.post("/", response_model=ContactResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=ContactResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def create_contact(body: ContactSchema, db: AsyncSession = Depends(get_db),  user: User = Depends(auth_service.get_current_user)):
     contact = await repositories_contacts.create_contact(body, db, user)
     return contact
@@ -55,7 +61,7 @@ async def update_contact(body: ContactUpdateSchema, contact_id: int = Path(ge=1)
     return contact
 
 
-@router.delete("/{contact_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{contact_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def delete_contact(contact_id: int = Path(ge=1), db: AsyncSession = Depends(get_db),  user: User = Depends(auth_service.get_current_user)):
     contact = await repositories_contacts.delete_contact(contact_id, db, user)
     return contact

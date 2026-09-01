@@ -1,6 +1,7 @@
 const API_BASE = 'http://localhost:8000/api'
 const CONTACTS_URL = `${API_BASE}/contacts/`
 const AUTH_URL = `${API_BASE}/auth`
+const USERS_URL = `${API_BASE}/users`
 
 function emptyContact() {
   return {
@@ -51,6 +52,11 @@ function contactsApp() {
     token: localStorage.getItem('access_token') || '',
     refreshToken: localStorage.getItem('refresh_token') || '',
     currentEmail: localStorage.getItem('current_email') || '',
+    currentUser: {
+      username: '',
+      email: '',
+      avatar: '',
+    },
     newContact: emptyContact(),
     loginForm: {
       email: '',
@@ -79,8 +85,14 @@ function contactsApp() {
       return Boolean(this.token)
     },
 
+    get avatarInitial() {
+      const source = this.currentUser.username || this.currentEmail || '?'
+      return source.charAt(0).toUpperCase()
+    },
+
     async init() {
       if (this.isAuthenticated) {
+        await this.loadCurrentUser()
         await this.getContacts()
       }
     },
@@ -140,6 +152,7 @@ function contactsApp() {
         localStorage.setItem('refresh_token', this.refreshToken)
         localStorage.setItem('current_email', this.currentEmail)
         this.loginForm.password = ''
+        await this.loadCurrentUser()
         this.setNotice('Login successful.')
         await this.getContacts()
       } catch (err) {
@@ -151,6 +164,7 @@ function contactsApp() {
       this.token = ''
       this.refreshToken = ''
       this.currentEmail = ''
+      this.currentUser = { username: '', email: '', avatar: '' }
       this.contacts = []
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
@@ -168,10 +182,51 @@ function contactsApp() {
         this.refreshToken = data.refresh_token
         localStorage.setItem('access_token', this.token)
         localStorage.setItem('refresh_token', this.refreshToken)
+        await this.loadCurrentUser()
         this.setNotice('Session refreshed.')
         await this.getContacts()
       } catch (err) {
         this.logout()
+        this.setError(err)
+      }
+    },
+
+    async loadCurrentUser() {
+      const user = await requestJson(`${USERS_URL}/me`, {
+        headers: this.authHeaders(),
+      })
+      this.currentUser = {
+        username: user.username || '',
+        email: user.email || '',
+        avatar: user.avatar || '',
+      }
+      this.currentEmail = user.email || this.currentEmail
+      localStorage.setItem('current_email', this.currentEmail)
+    },
+
+    async uploadAvatar(event) {
+      const file = event.target.files[0]
+
+      if (!file) {
+        return
+      }
+
+      try {
+        const form = new FormData()
+        form.append('file', file)
+        const user = await requestJson(`${USERS_URL}/avatar`, {
+          method: 'PATCH',
+          headers: this.authHeaders(),
+          body: form,
+        })
+        this.currentUser = {
+          username: user.username || '',
+          email: user.email || '',
+          avatar: user.avatar || '',
+        }
+        event.target.value = ''
+        this.setNotice('Avatar updated.')
+      } catch (err) {
         this.setError(err)
       }
     },

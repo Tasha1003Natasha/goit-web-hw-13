@@ -1,18 +1,17 @@
 import re
 from ipaddress import ip_address
 from typing import Callable
-from pathlib import Path
 
 from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
-from src.routes import contacts
-from src.routes import auth
+from src.routes import contacts,  auth, users
+from src.conf.config import config
+
 
 app = FastAPI()
 banned_ips = [
@@ -47,12 +46,9 @@ async def user_agent_ban_middleware(request: Request, call_next: Callable):
     return response
 
 
-# BASE_DIR = Path(".")
-# app.mount("/static", StaticFiles(directory=BASE_DIR /
-#           "src" / "static"), name="static")
-
 app.include_router(auth.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 
 
 @app.get("/")

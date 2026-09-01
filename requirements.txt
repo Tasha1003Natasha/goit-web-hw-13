@@ -26,3 +26,6 @@ python-jose==3.5.0
 python-multipart==0.0.32
 libgravatar==1.0.4
 fastapi==0.141.1
+fastapi-limiter==0.1.6
+redis==5.0.1
+cloudinary==1.46.2

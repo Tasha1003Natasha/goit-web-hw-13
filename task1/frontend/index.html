@@ -20,8 +20,14 @@
       </div>
       <div class="session-panel">
         <span class="status-dot" :class="{ 'is-online': isAuthenticated }"></span>
-        <span x-text="isAuthenticated ? `Signed in as ${currentEmail}` : 'Not signed in'"></span>
-        <button x-show="isAuthenticated" type="button" class="btn btn-sm btn-outline-light" @click="logout">Logout</button>
+        <div class="avatar-frame">
+          <img x-show="currentUser.avatar" :src="currentUser.avatar" alt="User avatar">
+          <span x-show="!currentUser.avatar" x-text="avatarInitial"></span>
+        </div>
+        <span class="session-email" x-text="isAuthenticated ? currentEmail : 'Not signed in'"></span>
+        <button x-show="isAuthenticated" type="button" class="logout-icon" @click="logout" aria-label="Logout" title="Logout">
+          <span aria-hidden="true">↪</span>
+        </button>
       </div>
     </header>
 
@@ -45,6 +51,10 @@
           <input type="password" x-model="loginForm.password" class="form-control" required minlength="6" maxlength="8">
           <button type="submit" class="btn btn-primary btn-block">Login</button>
           <button type="button" class="btn btn-outline-primary btn-block mt-2" @click="refreshSession" :disabled="!refreshToken">Refresh Token</button>
+          <div x-show="isAuthenticated" class="avatar-upload">
+            <label>Avatar</label>
+            <input type="file" class="form-control-file" accept="image/*" @change="uploadAvatar">
+          </div>
         </form>
 
         <form x-show="activeTab === 'signup'" class="panel" @submit.prevent="signup">
