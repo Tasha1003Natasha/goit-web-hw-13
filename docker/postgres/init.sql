@@ -1,0 +1,1 @@
+CREATE DATABASE goit_quotes_db;
