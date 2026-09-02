@@ -79,7 +79,7 @@ So you can keep one shared root `.env` for both tasks if it is more convenient.
 From the repository root:
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13
+cd /goit-web-hw-13
 source venv/bin/activate
 python -m pip install -r requirements.txt
 ```
@@ -107,14 +107,14 @@ If the database already exists, this command is not needed.
 Run commands from the `task2` folder:
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13/task2
+cd /goit-web-hw-13/task2
 ../venv/bin/python manage.py migrate
 ```
 
 ## Create Admin User
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13/task2
+cd /goit-web-hw-13/task2
 ../venv/bin/python manage.py createsuperuser
 ```
 
@@ -127,7 +127,7 @@ http://127.0.0.1:8000/admin/
 ## Run Server
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13/task2
+cd /goit-web-hw-13/task2
 ../venv/bin/python manage.py runserver
 ```
 
@@ -197,7 +197,7 @@ The project has JSON files in `task2/utils/` and custom management commands in `
 To load quotes, run:
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13/task2
+cd /goit-web-hw-13/task2
 ../venv/bin/python manage.py load_quotes
 ```
 
@@ -216,7 +216,7 @@ Use it only if your MongoDB migration settings/data are configured.
 The wrong Python interpreter is active. Use the shared root virtual environment:
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13
+cd /goit-web-hw-13
 source venv/bin/activate
 cd task2
 ../venv/bin/python manage.py runserver
@@ -263,7 +263,7 @@ docker ps
 ## Quick Start
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13
+cd /goit-web-hw-13
 source venv/bin/activate
 docker compose up -d
 

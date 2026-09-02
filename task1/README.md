@@ -90,7 +90,7 @@ python -m pip install -r requirements.txt
 PostgreSQL and Redis are started from the root `docker-compose.yml`:
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13
+cd /goit-web-hw-13
 docker compose up -d
 ```
 
@@ -111,7 +111,7 @@ PONG
 From `task1`:
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13/task1
+cd /goit-web-hw-13/task1
 ../venv/bin/python -m alembic upgrade head
 ```
 
@@ -126,7 +126,7 @@ Create a new migration:
 From `task1`:
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13/task1
+cd /goit-web-hw-13/task1
 ../venv/bin/python -m uvicorn main:app --reload
 ```
 
@@ -141,7 +141,7 @@ http://127.0.0.1:8000/docs
 In a second terminal:
 
 ```bash
-cd /Users/natalia/Documents/python/goit-web-hw-13/task1/frontend
+cd /goit-web-hw-13/task1/frontend
 python3 -m http.server 5500 --bind 127.0.0.1
 ```
 
