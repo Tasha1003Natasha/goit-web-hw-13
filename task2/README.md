@@ -94,13 +94,15 @@ Start PostgreSQL from the repository root:
 docker compose up -d
 ```
 
-If `POSTGRES_DB_QUOTES` does not exist yet, create it inside the running PostgreSQL container. Use the same user as `POSTGRES_USER` from `.env`:
+PostgreSQL creates the main database from `POSTGRES_DB`. On first start of a fresh PostgreSQL volume, Docker also runs:
 
-```bash
-docker exec -it goit_web_hw_13_db createdb -U your_postgres_user goit_quotes_db
+```text
+docker/postgres/init/create-databases.sh
 ```
 
-If the database already exists, this command is not needed.
+That script automatically creates the Django database from `POSTGRES_DB_QUOTES`, so you do not need to run `createdb` manually.
+
+Important: Docker init scripts run only when the PostgreSQL volume is created for the first time. If the volume already existed before `POSTGRES_DB_QUOTES` was configured, recreate the volume to rerun initialization.
 
 ## Run Migrations
 
@@ -232,17 +234,20 @@ python -m pip install -r requirements.txt
 
 ### `database "goit_quotes_db" does not exist`
 
-Create the task2 database:
-
-```bash
-docker exec -it goit_web_hw_13_db createdb -U your_postgres_user goit_quotes_db
-```
-
 Make sure `.env` contains:
 
 ```env
 POSTGRES_DB_QUOTES=goit_quotes_db
 ```
+
+If the PostgreSQL volume already existed before this variable or the Docker init script was added, recreate the volume so automatic initialization runs:
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
+Warning: `docker compose down -v` deletes PostgreSQL data.
 
 ### `connection refused` for PostgreSQL
 

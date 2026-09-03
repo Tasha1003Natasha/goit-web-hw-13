@@ -106,13 +106,15 @@ docker compose up -d
 
 This starts PostgreSQL and Redis.
 
-PostgreSQL creates the main database from `POSTGRES_DB`. The Django database from `POSTGRES_DB_QUOTES` is created by:
+PostgreSQL creates the main database from `POSTGRES_DB`. On first start of a fresh PostgreSQL volume, Docker also runs the init scripts from:
 
 ```text
-docker/postgres/init/create-databases.sh
+docker/postgres/init/
 ```
 
-Important: Docker init scripts run only when the PostgreSQL volume is created for the first time. If the volume already existed, the script will not run again.
+The script `docker/postgres/init/create-databases.sh` automatically creates the Django database from `POSTGRES_DB_QUOTES`, so you do not need to run `createdb` manually.
+
+Important: Docker init scripts run only when the PostgreSQL volume is created for the first time. If the volume already existed before `POSTGRES_DB_QUOTES` was configured, recreate the volume to rerun initialization.
 
 ## Task 1 - FastAPI Contacts API
 
@@ -248,15 +250,7 @@ goit_contacts_db
 goit_quotes_db
 ```
 
-If `goit_quotes_db` was not created because the volume already existed, either create it manually once or recreate the volume.
-
-Create manually without deleting data:
-
-```bash
-docker exec -it goit_web_hw_13_db createdb -U your_postgres_user goit_quotes_db
-```
-
-Recreate volume from scratch:
+If `goit_quotes_db` is missing because the PostgreSQL volume already existed before the init script was added, recreate the Docker volume so automatic initialization runs again:
 
 ```bash
 docker compose down -v
